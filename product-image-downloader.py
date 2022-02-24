@@ -3,7 +3,7 @@ import os, re, sys, requests
 dsx_files = 'dsx_files'
 output_folder = 'image cache'
 wiki_url = 'http://docs.daz3d.com/doku.php/public/read_me/index/', '/start'
-image_reg = r'"(https?:\/\/docs\.daz3d\.com\/lib\/exe\/fetch.php\?.+.jpg)" class="media"'
+image_reg = r'(https?:\/\/docs\.daz3d\.com\/lib\/exe\/fetch.php\?.+.jpg)" class="media" target'
 log_name = "{0}{1}".format(os.path.basename(sys.argv[0])[:-3], '.log')
 log_handler = open(log_name, 'a')
 
@@ -28,11 +28,11 @@ def save_jpg(data, product_id, metadata_file_name):
     try:
         result = re.sub(r'&amp;', '&', re.search(image_reg, data.text).group(1))
     except AttributeError:
-        result = re.search(image_reg, data.text)
+        result = re.search(image_reg, data.text).group(1)
     if not result:
         save_to_log('Product ID [{0}] - Image Doesn\'t exists [{1}]'.format(product_id, metadata_file_name), 'NO_FILE')
         return
-    
+
     try:
         # download image
         data = requests.get(result, allow_redirects=True)
@@ -45,6 +45,7 @@ def save_jpg(data, product_id, metadata_file_name):
             open('{0}/{1}.jpg'.format(output_folder, product_id), 'wb').write(data.content)
         except Exception as e:  # IO ERROR
             save_to_log('Error saving image: [{0}]'.format(e), 'FILE_IO')
+            return
 
 
 def get_wiki_page(product_id, metadata_file_name):
