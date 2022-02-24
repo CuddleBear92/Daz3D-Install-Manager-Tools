@@ -21,17 +21,18 @@ def save_jpg(data, product_id, metadata_file_name):
 
     # check if wiki page exists
     if re.search('Page Not Found', data.text):
-        save_to_log('Product ID [{0}] Not Found - DSX file [{1}]'.format(product_id, metadata_file_name[:-4]), 'WARN')
+        save_to_log('Product ID [{0}] Not Found - DSX file [{1}]'.format(product_id, metadata_file_name), 'WARN')
         return
 
     # find and filter image url
     try:
         result = re.sub(r'&amp;', '&', re.search(image_reg, data.text).group(1))
     except AttributeError:
-        result = re.search(image_reg, data.text).group(1)
-    if not result:
-        save_to_log('Product ID [{0}] - Image Doesn\'t exists [{1}]'.format(product_id, metadata_file_name), 'NO_FILE')
-        return
+        try:
+            result = re.search(image_reg, data.text)
+        except AttributeError:
+            save_to_log('Product ID [{0}] - Image Doesn\'t exists [{1}]'.format(product_id, metadata_file_name), 'NO_FILE')
+            return
 
     try:
         # download image
@@ -56,7 +57,7 @@ def get_wiki_page(product_id, metadata_file_name):
         save_to_log('Error saving file [{0}]'.format(e), 'CONNECTION_WIKI')
         return
     else:
-        save_jpg(data, product_id, metadata_file_name)
+        save_jpg(data, product_id, metadata_file_name[:-4])
 
 
 def main():
@@ -83,7 +84,7 @@ def main():
                 text += product_id
                 # check if file already exists
                 if os.path.isfile('{0}/{1}.jpg'.format(output_folder, product_id)):
-                    text += ' - [{0}]'.format(file)  # file already exists
+                    text += ' - [{0}]'.format(file[:-4])  # file already exists
                     print(text)
                     continue
 
