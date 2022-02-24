@@ -11,8 +11,10 @@ log_handler = open(log_name, 'a')
 
 def save_to_log(text, error_type):
     global consecutive_errors, log_handler
+    log = 'ERRN[{0}][{1}] {2}'.format(consecutive_errors, error_type, text)
     try:
-        log_handler.write('ERRN[{0}][{1}] {2}\n'.format(consecutive_errors, error_type, text))
+        print(log)
+        log_handler.write(log)
     except IOError:
         consecutive_errors += 1
         print('Error saving log\n Previous log: {0}\n'.format('[{0}] {1}'.format(error_type, text)))
@@ -20,9 +22,13 @@ def save_to_log(text, error_type):
 
 def save_jpg(data, product_id):
     global consecutive_errors
-    print('{0}{1}{2}'.format(wiki_url[0], product_id, wiki_url[1]))
+    # print('{0}{1}{2}'.format(wiki_url[0], product_id, wiki_url[1]))
 
     # find and filter image url
+    if re.search('Page Not Found', data.text):
+        save_to_log('Product ID [{0}] Not Found'.format(product_id), 'WARN')
+        return
+
     result = re.sub(r'&amp;', '&', re.search(image_reg, data.text).group(1))
 
     try:
@@ -59,7 +65,8 @@ def get_wiki_page(product_id):
 
 def main():
     global consecutive_errors, log_handler
-
+    text = ''
+    
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)  # make output folder
 
@@ -67,22 +74,32 @@ def main():
         os.mkdir(dsx_files)  # make dsx folder
 
     # loop thought dsx files
-    for (root, dirs, files) in os.walk(dsx_files, topdown=True):
-        if consecutive_errors >= 3:
-            save_to_log('Too many consecutive errors exiting', 'FATAL')
-            log_handler.close()
-            exit(-1)
-        # parses XML file
-        dsx_root = eT.parse('{0}/{1}'.format(dsx_files, files[0])).getroot()
-        # get product ID
-        product_id = re.findall(r'[0-9]+', dsx_root.findall('ProductStoreIDX')[0].attrib['VALUE'])[0]
-        # check if file already exists
-        if os.path.isfile('{0}/{1}{2}'.format(output_folder, product_id, '.jpg')):
-            print('.')  # file already exists
-            continue
+    for (root, dirs, files) in os.walk(dsx_files):
+        for file in files:
+            text = ''
+            if consecutive_errors >= 3:
+                save_to_log('Too many consecutive errors exiting', 'FATAL')
+                log_handler.close()
+                exit(-1)
 
-        get_wiki_page(product_id)
+            # parses XML file
+            dsx_root = eT.parse('{0}/{1}'.format(dsx_files, file)).getroot()
+            # get product ID
+            try:
+                product_id = re.findall(r'[0-9]+', dsx_root.findall('ProductStoreIDX')[0].attrib['VALUE'])[0]
+            except AttributeError:
+                save_to_log('Could not find ID on file {0}'.format(file), 'WARN')
+                continue
+            else:
+                text += product_id
+                # check if file already exists
+                if os.path.isfile('{0}/{1}.jpg'.format(output_folder, product_id)):
+                    text += ' .'  # file already exists
+                    print(text)
+                    continue
 
+                get_wiki_page(product_id)
+    log_handler.close()
 
 if __name__ == '__main__':
     main()
