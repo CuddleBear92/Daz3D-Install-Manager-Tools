@@ -31,7 +31,8 @@ def save_jpg(data, product_id, metadata_file_name):
         result = re.search(image_reg, data.text)
     if not result:
         save_to_log('Product ID [{0}] - Image Doesn\'t exists [{1}]'.format(product_id, metadata_file_name), 'NO_FILE')
-
+        return
+    
     try:
         # download image
         data = requests.get(result, allow_redirects=True)
