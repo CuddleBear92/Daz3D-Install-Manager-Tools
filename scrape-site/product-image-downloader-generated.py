@@ -1,7 +1,7 @@
 import os, re, sys, requests
 
 dsx_files = 'dsx'
-output_folder = 'images'
+output_folder = 'Thumbnails'
 wiki_url = 'http://docs.daz3d.com/doku.php/public/read_me/index/', '/start'
 image_reg = r'(https?:\/\/docs\.daz3d\.com\/lib\/exe\/fetch.php\?.+.jpg)" class="media" target'
 log_name = "{0}{1}".format(os.path.basename(sys.argv[0])[:-3], '.log')
