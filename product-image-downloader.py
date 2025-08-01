@@ -1,6 +1,6 @@
 import os, re, sys, requests
 
-dsx_files = 'dsx_files'
+dsx_files = 'Downloads'
 output_folder = 'C:\\Users\\Public\\Documents\\DAZ 3D\\InstallManager\\Thumbnails'
 wiki_url = 'http://docs.daz3d.com/doku.php/public/read_me/index/', '/start'
 image_reg = r'(https?:\/\/docs\.daz3d\.com\/lib\/exe\/fetch.php\?.+.jpg)" class="media" target'
