@@ -65,11 +65,21 @@ def main():
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)  # make output folder
 
+    # Collect existing image files once at the start
+    existing_files = set()
+    for file in os.listdir(output_folder):
+        if file.endswith('.jpg'):
+            # Extract product ID from filename (remove .jpg extension)
+            try:
+                product_id = int(file[:-4])  # Remove '.jpg' and convert to int
+                existing_files.add(product_id)
+            except ValueError:
+                continue  # Skip files that don't match the expected format
+
     # Loop through product IDs in the specified range
     for product_id in range(START_PRODUCT_ID, END_PRODUCT_ID + 1):
-        formatted_id = f"{product_id:08d}"  # Format as 8-digit number (e.g., 00000001)
-        # Check if file already exists
-        if os.path.isfile(f"{output_folder}/{product_id}.jpg"):
+        # Check if file already exists using the set
+        if product_id in existing_files:
             print(f"Product ID {product_id} - Image already exists")
             continue
         get_wiki_page(product_id)
